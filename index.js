@@ -7,6 +7,7 @@ const infura = new Web3(config.infura.url);
 const account = config.infura.account;
 const secretkey = Buffer.from(config.infura.secretkey, 'hex');
 
+// Step 1 : we create the contract
 infura.eth.getTransactionCount(account, (err, txCount) => {
 
     // smart contract data
@@ -36,12 +37,41 @@ infura.eth.getTransactionCount(account, (err, txCount) => {
     //});
 });
 
-// Get Contract informations
+// Step 2 : Get Contract informations
 const contractAddress = '0x59432936a731269Fa5564C67665740237240AD93';
-const abi = [{"constant":false,"inputs":[{"name":"x","type":"uint256"}],"name":"set","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[],"name":"get","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"}];
+const contractABI = [{"constant":false,"inputs":[{"name":"x","type":"uint256"}],"name":"set","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[],"name":"get","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"}];
 
-const simpleStorageContract = new infura.eth.Contract(abi, contractAddress);
+const simpleStorageContract = new infura.eth.Contract(contractABI, contractAddress);
 console.log(simpleStorageContract);
+
+// Step 3 : call function
+infura.eth.getTransactionCount(account, (err, txCount) => {
+
+    const data = simpleStorageContract.methods.set(100).encodeABI();
+
+    // create transaction object
+    const txObject = {
+        nonce: infura.utils.toHex(txCount),
+        gasLimit: infura.utils.toHex(1000000), // raise this if necessary
+        gasPrice: infura.utils.toHex(infura.utils.toWei('10', 'gwei')),
+        to: contractAddress,
+        data: data
+    };
+
+    // sign transaction
+    const tx = new Tx(txObject);
+    tx.sign(secretkey);
+
+    const serializedTx = tx.serialize();
+
+    const raw = '0x' + serializedTx.toString('hex');
+
+    // create a new smart contract transaction
+    // https://ropsten.etherscan.io/address/0x59432936a731269Fa5564C67665740237240AD93
+    infura.eth.sendSignedTransaction(raw, (err, txHash) => {
+        console.log('err:', err, ' txHash:', txHash);
+    });
+});
 
 // Ganache (Dev Blockchain implementation)
 // https://truffleframework.com/ganache
