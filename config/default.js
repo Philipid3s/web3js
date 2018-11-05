@@ -11,7 +11,12 @@ module.exports = {
         account1:  '',
         account2: '',
     },
-    infura: {
+    ropsten: {
+        url: '',
+        account: '',
+        secretkey: process.env.PRIVATE_KEY,
+    },
+    mainnet: {
         url: '',
         account: '',
         secretkey: process.env.PRIVATE_KEY,

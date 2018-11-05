@@ -3,12 +3,12 @@ const Web3 = require('web3');
 const config = require ('config');
 
 // https://infura.io
-const infura = new Web3(config.infura.url);
-const account = config.infura.account;
-const secretkey = Buffer.from(config.infura.secretkey, 'hex');
+const ropsten = new Web3(config.ropsten.url);
+const account = config.ropsten.account;
+const secretkey = Buffer.from(config.ropsten.secretkey, 'hex');
 
 // Step 1 : we create the contract
-infura.eth.getTransactionCount(account, (err, txCount) => {
+ropsten.eth.getTransactionCount(account, (err, txCount) => {
 
     // smart contract data
     // Simple Storage contract (https://solidity.readthedocs.io/en/v0.4.24/introduction-to-smart-contracts.html)
@@ -16,9 +16,9 @@ infura.eth.getTransactionCount(account, (err, txCount) => {
     
     // create transaction object
     const txObject = {
-        nonce: infura.utils.toHex(txCount),
-        gasLimit: infura.utils.toHex(1000000), // raise this if necessary
-        gasPrice: infura.utils.toHex(infura.utils.toWei('10', 'gwei')),
+        nonce: ropsten.utils.toHex(txCount),
+        gasLimit: ropsten.utils.toHex(1000000), // raise this if necessary
+        gasPrice: ropsten.utils.toHex(ropsten.utils.toWei('10', 'gwei')),
         data: data
     };
 
@@ -32,7 +32,7 @@ infura.eth.getTransactionCount(account, (err, txCount) => {
 
     // create a new smart contract transaction
     // https://ropsten.etherscan.io/address/0x59432936a731269Fa5564C67665740237240AD93
-    //infura.eth.sendSignedTransaction(raw, (err, txHash) => {
+    //ropsten.eth.sendSignedTransaction(raw, (err, txHash) => {
     //    console.log('err:', err, ' txHash:', txHash);
     //});
 });
@@ -41,19 +41,28 @@ infura.eth.getTransactionCount(account, (err, txCount) => {
 const contractAddress = '0x59432936a731269Fa5564C67665740237240AD93';
 const contractABI = [{"constant":false,"inputs":[{"name":"x","type":"uint256"}],"name":"set","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[],"name":"get","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"}];
 
-const simpleStorageContract = new infura.eth.Contract(contractABI, contractAddress);
-console.log(simpleStorageContract);
+const simpleStorageContract = new ropsten.eth.Contract(contractABI, contractAddress);
 
-// Step 3 : call function
-infura.eth.getTransactionCount(account, (err, txCount) => {
+// Get current data value
+simpleStorageContract.methods.get().call((err, output) => {
+    if (!err)
+    {
+        console.log('Data:',output);
+    } else {
+        console.error(err.message);
+    }
+});
+
+// Step 3 : call function - Create Transaction
+ropsten.eth.getTransactionCount(account, (err, txCount) => {
 
     const data = simpleStorageContract.methods.set(100).encodeABI();
 
     // create transaction object
     const txObject = {
-        nonce: infura.utils.toHex(txCount),
-        gasLimit: infura.utils.toHex(1000000), // raise this if necessary
-        gasPrice: infura.utils.toHex(infura.utils.toWei('10', 'gwei')),
+        nonce: ropsten.utils.toHex(txCount),
+        gasLimit: ropsten.utils.toHex(1000000), // raise this if necessary
+        gasPrice: ropsten.utils.toHex(ropsten.utils.toWei('10', 'gwei')),
         to: contractAddress,
         data: data
     };
@@ -68,12 +77,12 @@ infura.eth.getTransactionCount(account, (err, txCount) => {
 
     // create a new smart contract transaction
     // https://ropsten.etherscan.io/address/0x59432936a731269Fa5564C67665740237240AD93
-    infura.eth.sendSignedTransaction(raw, (err, txHash) => {
-        console.log('err:', err, ' txHash:', txHash);
-    });
+    //ropsten.eth.sendSignedTransaction(raw, (err, txHash) => {
+    //    console.log('err:', err, ' txHash:', txHash);
+    //});
 });
 
-// Ganache (Dev Blockchain implementation)
+// Ganache (Dev/Local Blockchain implementation)
 // https://truffleframework.com/ganache
 const url2 = config.ganache.url;
 const account1 = config.ganache.account1;
